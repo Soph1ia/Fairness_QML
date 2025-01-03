@@ -71,7 +71,7 @@ def callback_graph(weights, obj_func_eval):
     plt.show()
 
 
-def create_vqc_model(X_train):
+def create_vqc_model(X_train, x_test, y_test):
     """
     Method that creates a FeatureMap
     initialises a sampler and optimizer
@@ -89,12 +89,18 @@ def create_vqc_model(X_train):
 
     optimizer_c = COBYLA(maxiter=100)  # optimizer
 
+    # combine test x and y into one
+    test_data = x_test.copy()
+    test_data['target'] = y_test
+
     my_vqc = VQC(
         sampler=sampler,
         feature_map=zz_feature_map,
         ansatz=EfficientSU2(num_qubits=num_features, reps=1),
         optimizer=optimizer_c,
-        callback=callback_graph
+        callback=callback_graph,
+        test=test_data
+
     )
 
     # my_vqc.fit()
@@ -113,7 +119,7 @@ def train_vqc_model(vqc, X_train, y_train):
     print(f"Training time: {round(elapsed)} seconds")
 
 
-def test_trained_model_on_fairness(vqc_model, entire dataset):
+def test_trained_model_on_fairness(vqc_model, entire_dataset):
     """
     This method needs to return how fair a model is
     TODO implement this method
@@ -124,14 +130,14 @@ def test_trained_model_on_fairness(vqc_model, entire dataset):
     print(f"Prediction accuracy: {accuracy}")
 
     # copy of dataset_all
-    dataset_prediction = dataset_all.copy()
-    dataset_prediction.labels = y_pred.reshape(-1, 1)
+    # dataset_prediction = dataset_all.copy()
+    # dataset_prediction.labels = y_pred.reshape(-1, 1)
 
     # Classification metrics
-    metric_prediction = ClassificationMetric(dataset_all,
-    dataset_prediction,
-    unprivileged_groups=unprivileged_groups,
-    privileged_groups=privileged_groups)
+    # metric_prediction = ClassificationMetric(dataset_all,
+    # dataset_prediction,
+    # unprivileged_groups=unprivileged_groups,
+    # privileged_groups=privileged_groups)
 
 # main
 if __name__ == "__main__":
@@ -143,5 +149,5 @@ if __name__ == "__main__":
 
     created_vqc = create_vqc_model(X_train)
 
-    print(created_vqc.circuit.num_qubits)
+    print("The number of qubits", created_vqc.circuit.num_qubits)
     train_vqc_model(created_vqc, X_train, y_train)
