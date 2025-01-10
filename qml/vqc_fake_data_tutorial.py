@@ -5,7 +5,6 @@ from qiskit_algorithms.utils import algorithm_globals
 from qiskit.circuit.library import ZFeatureMap, PauliFeatureMap, ZZFeatureMap
 from qiskit.circuit.library import RealAmplitudes
 from qiskit_algorithms.optimizers import COBYLA, SPSA
-from qiskit.primitives import Sampler
 from matplotlib import pyplot as plt
 from IPython.display import clear_output
 from qiskit.circuit.library import EfficientSU2
@@ -37,18 +36,18 @@ def preprocess_data(df):
     Method to remap the data to numerical values and split the data into train and test
     """
     # remap gender to binary
-    gender_mapping = {'male': 0, 'female': 1}
+    map = {'male': 0, 'female': 1}
 
     # replace values in gender column
-    df['gender'].replace(gender_mapping, inplace=True)
+    fake_data_df['gender'] = fake_data_df['gender'].replace(map)
 
     # remap the car column to binary
-    car_mapping = {'yes': 0, 'no': 1}
+    map = {'yes': 0, 'no': 1}
 
     # replace values in car column
-    df['car'].replace(car_mapping, inplace=True)
+    fake_data_df['car'] = fake_data_df['car'].replace(map)
 
-    # spit the data into y and x 
+    # spit the data into y and x
     y = df['target']
     X = df.drop(columns=['target'])
 
@@ -85,7 +84,7 @@ def create_vqc_model(X_train, x_test, y_test):
     zz_feature_map = ZZFeatureMap(feature_dimension=num_features, reps=1)
     zz_feature_map.decompose().draw(output="mpl", style="clifford", fold=20)
 
-    sampler = Sampler()
+    sampler = StatevectorSampler()
 
     optimizer_c = COBYLA(maxiter=100)  # optimizer
 
@@ -93,19 +92,14 @@ def create_vqc_model(X_train, x_test, y_test):
     test_data = x_test.copy()
     test_data['target'] = y_test
 
-    my_vqc = VQC(
-        sampler=sampler,
+    my_basic_vqc = myBasicVQCClass.BasicClass(
         feature_map=zz_feature_map,
         ansatz=EfficientSU2(num_qubits=num_features, reps=1),
-        optimizer=optimizer_c,
-        callback=callback_graph,
-        test=test_data
-
+        optimizer=COBYLA(maxiter=100),
+        callback=callback_graph
     )
 
-    # my_vqc.fit()
-
-    return my_vqc
+    return my_basic_vqc
 
 
 def train_vqc_model(vqc, X_train, y_train):
@@ -147,7 +141,7 @@ if __name__ == "__main__":
     fake_data_df = load_data()
     X_train, X_test, y_train, y_test = preprocess_data(fake_data_df)
 
-    created_vqc = create_vqc_model(X_train)
+    created_vqc = create_vqc_model(X_train,X_test,y_test)
 
     print("The number of qubits", created_vqc.circuit.num_qubits)
-    train_vqc_model(created_vqc, X_train, y_train)
+    # train_vqc_model(created_vqc, X_train, y_train)

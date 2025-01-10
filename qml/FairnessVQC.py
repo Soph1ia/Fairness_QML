@@ -49,7 +49,7 @@ class FairnessVQC(VQC):
         self.testing_data = testing_data
         self.fairness_metric = fairness_metric
 
-    ## Methods
+    # Methods
     # override the implementation of the objective function to include the fairness metric
     def _objective_function(self, weights: np.ndarray) -> float:
         # compute the loss
